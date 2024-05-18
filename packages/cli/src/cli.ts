@@ -7,6 +7,7 @@ import mikktspace from 'mikktspace';
 import { MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 import { ready as resampleReady, resample as resampleWASM } from 'keyframe-resample';
 import { Logger, NodeIO, PropertyType, VertexLayout, vec2, Transform, Accessor } from '@gltf-transform/core';
+import { KHRAccessorFloat64 } from '@gltf-transform/extensions';
 import {
 	CenterOptions,
 	InstanceOptions,
@@ -977,6 +978,7 @@ program
 		return Session.create(io, logger, args.input, args.output).transform(
 			dequantize({ ...options }),
 			(document) => {
+				document.createExtension(KHRAccessorFloat64).setRequired(true);
 				for (const accessor of document.getRoot().listAccessors()) {
 					if (accessor.getComponentType() === Accessor.ComponentType.FLOAT) {
 						accessor.setArray(new Float64Array(accessor.getArray()!));
@@ -999,6 +1001,11 @@ program
 				for (const accessor of document.getRoot().listAccessors()) {
 					if (accessor.getComponentType() === Accessor.ComponentType.FLOAT64) {
 						accessor.setArray(new Float32Array(accessor.getArray()!));
+					}
+				}
+				for (const extension of document.getRoot().listExtensionsUsed()) {
+					if (extension.extensionName === 'KHR_accessor_float64') {
+						extension.dispose();
 					}
 				}
 			}
